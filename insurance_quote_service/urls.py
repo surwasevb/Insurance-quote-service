@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from app.views import CustomerView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/v1/create_customer/", CustomerView.as_view(), name="create_customer"),
 ]
