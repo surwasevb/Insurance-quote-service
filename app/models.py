@@ -13,3 +13,27 @@ class Customer(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class PolicyState(models.TextChoices):
+    NEW = 'new', 'New'
+    QUOTED = 'quoted', 'Quoted'
+    BOUND = 'bound', 'Bound'
+    ACTIVE = 'active', 'Active'
+
+class Policy(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name='policies'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    type = models.CharField(max_length=100)
+    premium = models.IntegerField(default=0)
+    cover = models.IntegerField(default=0)
+    state = models.CharField(max_length=100, default=PolicyState.NEW, choices=PolicyState.choices)
+
+    def __str__(self):
+        return f"{self.type} {self.customer}"
