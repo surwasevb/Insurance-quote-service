@@ -1,8 +1,7 @@
 import datetime
-from decimal import Decimal
-from dateutil.relativedelta import relativedelta
 
 import pytest
+from dateutil.relativedelta import relativedelta
 
 
 @pytest.fixture
