@@ -10,6 +10,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = ["first_name", "last_name", "dob"]
 
+
 class QuoteCreateSerializer(serializers.Serializer):
     customer_id = serializers.UUIDField(required=True)
     type = serializers.CharField(required=True)
@@ -17,14 +18,24 @@ class QuoteCreateSerializer(serializers.Serializer):
 
 class QuoteUpdateSerializer(serializers.Serializer):
     policy_id = serializers.UUIDField(required=True)
-    status = serializers.ChoiceField(required=True, choices = PolicyState.choices)
+    status = serializers.ChoiceField(required=True, choices=PolicyState.choices)
+
 
 class PolicySerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
 
     class Meta:
         model = Policy
-        fields = ["id", "customer", "type", "premium", "cover", "state", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "customer",
+            "type",
+            "premium",
+            "cover",
+            "state",
+            "created_at",
+            "updated_at",
+        ]
         read_only_fields = fields
 
 

@@ -1,14 +1,19 @@
 import logging
 
 from django.shortcuts import get_object_or_404
-from rest_framework import status, generics
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.models import Customer, Policy, PolicyState, PolicyStateHistory
-from app.serializers import CustomerSerializer, PolicySerializer, QuoteCreateSerializer, \
-    QuoteUpdateSerializer, PolicyStateHistorySerializer
+from app.serializers import (
+    CustomerSerializer,
+    PolicySerializer,
+    PolicyStateHistorySerializer,
+    QuoteCreateSerializer,
+    QuoteUpdateSerializer,
+)
 from app.utils import calculate_age, calculate_premium
 
 logger = logging.getLogger(__name__)
@@ -31,17 +36,25 @@ class CustomerView(APIView):
         if last_name := params.get("last_name"):
             qs = qs.filter(last_name=last_name)
 
-        return Response(status=status.HTTP_200_OK, content_type="application/json",data = CustomerSerializer(qs.get()).data)
+        return Response(
+            status=status.HTTP_200_OK,
+            content_type="application/json",
+            data=CustomerSerializer(qs.get()).data,
+        )
 
     def post(self, request, *args, **kwargs):
-        logger.info(F"Received Create request for customer {request.data}")
+        logger.info(f"Received Create request for customer {request.data}")
 
         customer_serializer = CustomerSerializer(data=request.data)
         customer_serializer.is_valid(raise_exception=True)
         customer: Customer = customer_serializer.save()
 
-        logger.info(F"Successfully created user with {customer.id}")
-        return Response(status=status.HTTP_201_CREATED, content_type="application/json", data={"id": customer.id})
+        logger.info(f"Successfully created user with {customer.id}")
+        return Response(
+            status=status.HTTP_201_CREATED,
+            content_type="application/json",
+            data={"id": customer.id},
+        )
 
 
 class QuoteView(APIView):
@@ -49,32 +62,38 @@ class QuoteView(APIView):
     authentication_classes = []
 
     def post(self, request, *args, **kwargs):
-        logger.info(F"Received request for quote processing {request.data}")
+        logger.info(f"Received request for quote processing {request.data}")
 
         quote = QuoteCreateSerializer(data=request.data)
         quote.is_valid(raise_exception=True)
 
-        customer = Customer.objects.get(id=quote.validated_data['customer_id'])
+        customer = Customer.objects.get(id=quote.validated_data["customer_id"])
         age: int = calculate_age(date_of_birth=customer.dob)
-        premium, cover = calculate_premium(age=age, type=quote.validated_data['type'])
-        policy = Policy.objects.create(customer=customer, premium=premium, cover=cover,
-                                       type=quote.validated_data['type'],
-                                       state=PolicyState.QUOTED)
+        premium, cover = calculate_premium(age=age, type=quote.validated_data["type"])
+        policy = Policy.objects.create(
+            customer=customer,
+            premium=premium,
+            cover=cover,
+            type=quote.validated_data["type"],
+            state=PolicyState.QUOTED,
+        )
 
-        PolicyStateHistory.objects.create(policy=policy, from_state=PolicyState.NEW,
-                                          to_state=PolicyState.QUOTED, note="updated via api")
-        logger.info(F"Successfully created quotes with {policy.id}")
+        PolicyStateHistory.objects.create(
+            policy=policy,
+            from_state=PolicyState.NEW,
+            to_state=PolicyState.QUOTED,
+            note="updated via api",
+        )
+        logger.info(f"Successfully created quotes with {policy.id}")
 
         return Response(
             status=status.HTTP_201_CREATED,
             content_type="application/json",
-            data={
-                "id": policy.id
-            }
+            data={"id": policy.id},
         )
 
     def patch(self, request, *args, **kwargs):
-        logger.info(F"Received Patch request for quote {request.data}")
+        logger.info(f"Received Patch request for quote {request.data}")
         quote = QuoteUpdateSerializer(data=request.data)
         quote.is_valid(raise_exception=True)
 
@@ -86,10 +105,19 @@ class QuoteView(APIView):
         policy.state = new_state
         policy.save()
 
-        PolicyStateHistory.objects.create(policy=policy, from_state=prev_state,
-                                          to_state=new_state, note="updated via api")
+        PolicyStateHistory.objects.create(
+            policy=policy,
+            from_state=prev_state,
+            to_state=new_state,
+            note="updated via api",
+        )
 
-        return Response(status=status.HTTP_200_OK, content_type="application/json", data={"id": policy.id})
+        return Response(
+            status=status.HTTP_200_OK,
+            content_type="application/json",
+            data={"id": policy.id},
+        )
+
 
 class PolicyListView(generics.ListAPIView):
     """GET /api/v1/policies/?customer_id=&type="""

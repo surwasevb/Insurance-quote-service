@@ -14,21 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 
-from app.views import CustomerView, QuoteView, PolicyListView, PolicyDetailView, \
-    PolicyHistoryView
+from app.views import (
+    CustomerView,
+    PolicyDetailView,
+    PolicyHistoryView,
+    PolicyListView,
+    QuoteView,
+)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-
+    path("admin/", admin.site.urls),
     path("api/v1/create_customer/", CustomerView.as_view(), name="customer"),
     path("api/v1/customer/", CustomerView.as_view(), name="customer-search"),
-
     path("api/v1/quote/", QuoteView.as_view(), name="quote"),
     path("api/v1/policies/", PolicyListView.as_view(), name="policy-for-user"),
-    path("api/v1/policies/<uuid:pk>/", PolicyDetailView.as_view(), name="policy-details"),
-
-    path("api/v1/policies/<uuid:policy_id>/history/", PolicyHistoryView.as_view(), name="policy-history"),
+    path(
+        "api/v1/policies/<uuid:pk>/", PolicyDetailView.as_view(), name="policy-details"
+    ),
+    path(
+        "api/v1/policies/<uuid:policy_id>/history/",
+        PolicyHistoryView.as_view(),
+        name="policy-history",
+    ),
 ]

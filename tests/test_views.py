@@ -9,12 +9,7 @@ from app.models import Customer, Policy, PolicyState, PolicyStateHistory
 class TestCustomerView(APITestCase):
 
     def test_should_create_customer_successfully(self):
-        data = {
-            "first_name": "Ben",
-            "last_name": "Stokes",
-            "dob": "25-06-1991"
-
-        }
+        data = {"first_name": "Ben", "last_name": "Stokes", "dob": "25-06-1991"}
 
         response = self.client.post(reverse("customer"), data=data)
         id = response.data.get("id")
@@ -27,15 +22,12 @@ class TestCustomerView(APITestCase):
         assert customer.dob == datetime.date.strptime(data["dob"], "%d-%m-%Y")
 
     def test_should_throw_error_while_creating_customer_missing_dob(self):
-        data = {
-            "first_name": "Ben",
-            "last_name": "Stokes"
-        }
+        data = {"first_name": "Ben", "last_name": "Stokes"}
 
         response = self.client.post(reverse("customer"), data=data)
 
         assert response.status_code == 400
-        assert response.data['dob'][0] == 'This field is required.'
+        assert response.data["dob"][0] == "This field is required."
         assert Customer.objects.all().count() == 0
 
     def test_should_return_search_customer_successfully(self):
@@ -43,7 +35,11 @@ class TestCustomerView(APITestCase):
             "first_name": "Ben",
             "last_name": "Stokes",
         }
-        Customer.objects.create(first_name="Ben", last_name="Stokes",dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"))
+        Customer.objects.create(
+            first_name="Ben",
+            last_name="Stokes",
+            dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"),
+        )
         response = self.client.get(reverse("customer"), data=data)
 
         assert response.status_code == 200
@@ -53,13 +49,16 @@ class TestCustomerView(APITestCase):
 class TestQuoteView(APITestCase):
 
     def setUp(self):
-        Customer.objects.create(first_name="Ben", last_name="Stokes",
-                                dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"))
+        Customer.objects.create(
+            first_name="Ben",
+            last_name="Stokes",
+            dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"),
+        )
 
     def test_should_create_quote_successfully(self):
         data = {
             "customer_id": Customer.objects.all()[0].id,
-            "type": "personal-accident"
+            "type": "personal-accident",
         }
         response = self.client.post(reverse("quote"), data=data)
         policy = Policy.objects.get(id=(response.data.get("id")))
@@ -74,13 +73,13 @@ class TestQuoteView(APITestCase):
     def test_should_update_quote_successfully(self):
         data = {
             "customer_id": Customer.objects.all()[0].id,
-            "type": "personal-accident"
+            "type": "personal-accident",
         }
         response_policy = self.client.post(reverse("quote"), data=data)
 
         policy_data = {
             "policy_id": response_policy.data.get("id"),
-            "status": "accepted"
+            "status": "accepted",
         }
 
         response = self.client.patch(reverse("quote"), data=policy_data)
@@ -91,18 +90,23 @@ class TestQuoteView(APITestCase):
         assert policy.state == PolicyState.ACCEPTED
         assert policy.customer_id == data["customer_id"]
         assert policy_history.count() == 2
-        assert policy_history[0].from_state == 'new'
-        assert policy_history[0].to_state == 'quoted'
-        assert policy_history[1].from_state == 'quoted'
-        assert policy_history[1].to_state == 'accepted'
+        assert policy_history[0].from_state == "new"
+        assert policy_history[0].to_state == "quoted"
+        assert policy_history[1].from_state == "quoted"
+        assert policy_history[1].to_state == "accepted"
 
 
 class TestPolicyView(APITestCase):
 
     def setUp(self):
-        customer = Customer.objects.create(first_name="Ben", last_name="Stokes",
-                                           dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"))
-        policy = Policy.objects.create(customer=customer, type="personal-accident", premium=3500, cover=3500)
+        customer = Customer.objects.create(
+            first_name="Ben",
+            last_name="Stokes",
+            dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"),
+        )
+        Policy.objects.create(
+            customer=customer, type="personal-accident", premium=3500, cover=3500
+        )
 
     def test_should_return_policy_successfully(self):
         policy_id = Policy.objects.all()[0].id
@@ -114,7 +118,9 @@ class TestPolicyView(APITestCase):
     def test_should_return_policy_for_given_customer_id_successfully(self):
         customer_id = Customer.objects.all()[0].id
 
-        response = self.client.get(reverse("policy-for-user"), {'customer_id': customer_id})
+        response = self.client.get(
+            reverse("policy-for-user"), {"customer_id": customer_id}
+        )
 
         assert response.status_code == 200
         assert len(response.data) == 1
@@ -124,7 +130,9 @@ class TestPolicyView(APITestCase):
 
     def test_should_return_policy_history_successfully(self):
         policy = Policy.objects.all()[0]
-        PolicyStateHistory.objects.create(policy=policy, to_state=PolicyState.ACCEPTED, from_state=PolicyState.QUOTED)
+        PolicyStateHistory.objects.create(
+            policy=policy, to_state=PolicyState.ACCEPTED, from_state=PolicyState.QUOTED
+        )
 
         response = self.client.get(reverse("policy-history", args=[policy.id]))
 

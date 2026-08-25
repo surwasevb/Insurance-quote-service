@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs shell migrate makemigrations superuser dbshell
+.PHONY: help build up down restart logs shell migrate makemigrations superuser dbshell db format lint lint-fix typecheck
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -40,3 +40,18 @@ run: ## Run makemigrations, migrate, then start dev server
 	docker compose up --build
 
 setup: migrate makemigrations migrate ## Run initial setup (migrate + makemigrations + migrate)
+
+db: ## Start only the database service
+	docker compose up -d db
+
+format: ## Format code with Black
+	black .
+
+lint: ## Lint code with Ruff
+	ruff check .
+
+lint-fix: ## Lint and auto-fix with Ruff
+	ruff check --fix .
+
+typecheck: ## Run type checking with mypy
+	mypy .

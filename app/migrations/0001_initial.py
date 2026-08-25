@@ -9,43 +9,117 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Customer',
+            name="Customer",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('first_name', models.CharField(max_length=100)),
-                ('last_name', models.CharField(max_length=100)),
-                ('dob', models.DateField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("first_name", models.CharField(max_length=100)),
+                ("last_name", models.CharField(max_length=100)),
+                ("dob", models.DateField()),
             ],
         ),
         migrations.CreateModel(
-            name='Policy',
+            name="Policy",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(max_length=100)),
-                ('premium', models.IntegerField(default=0)),
-                ('cover', models.IntegerField(default=0)),
-                ('state', models.CharField(choices=[('new', 'New'), ('quoted', 'Quoted'), ('bound', 'Bound'), ('active', 'Active'), ('accepted', 'Accepted')], default='new', max_length=100)),
-                ('customer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='policies', to='app.customer')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("type", models.CharField(max_length=100)),
+                ("premium", models.IntegerField(default=0)),
+                ("cover", models.IntegerField(default=0)),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[
+                            ("new", "New"),
+                            ("quoted", "Quoted"),
+                            ("bound", "Bound"),
+                            ("active", "Active"),
+                            ("accepted", "Accepted"),
+                        ],
+                        default="new",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "customer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="policies",
+                        to="app.customer",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PolicyStateHistory',
+            name="PolicyStateHistory",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('from_state', models.CharField(choices=[('new', 'New'), ('quoted', 'Quoted'), ('bound', 'Bound'), ('active', 'Active'), ('accepted', 'Accepted')], max_length=100)),
-                ('to_state', models.CharField(choices=[('new', 'New'), ('quoted', 'Quoted'), ('bound', 'Bound'), ('active', 'Active'), ('accepted', 'Accepted')], max_length=100)),
-                ('changed_at', models.DateTimeField(auto_now_add=True)),
-                ('note', models.TextField(blank=True)),
-                ('policy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='state_history', to='app.policy')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "from_state",
+                    models.CharField(
+                        choices=[
+                            ("new", "New"),
+                            ("quoted", "Quoted"),
+                            ("bound", "Bound"),
+                            ("active", "Active"),
+                            ("accepted", "Accepted"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "to_state",
+                    models.CharField(
+                        choices=[
+                            ("new", "New"),
+                            ("quoted", "Quoted"),
+                            ("bound", "Bound"),
+                            ("active", "Active"),
+                            ("accepted", "Accepted"),
+                        ],
+                        max_length=100,
+                    ),
+                ),
+                ("changed_at", models.DateTimeField(auto_now_add=True)),
+                ("note", models.TextField(blank=True)),
+                (
+                    "policy",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="state_history",
+                        to="app.policy",
+                    ),
+                ),
             ],
         ),
     ]
