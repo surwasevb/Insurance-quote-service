@@ -3,7 +3,6 @@ import logging
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -23,12 +22,9 @@ logger = logging.getLogger(__name__)
 
 # Create your views here.
 class CustomerView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
-
-    serializer_class = CustomerSerializer
 
     def get(self, request, *args, **kwargs):
+        logger.info(f"Received GET request for customer {request.data}")
         qs = Customer.objects.all()
         params = request.query_params
 
@@ -36,6 +32,8 @@ class CustomerView(APIView):
             qs = qs.filter(first_name=first_name)
         if last_name := params.get("last_name"):
             qs = qs.filter(last_name=last_name)
+
+        logger.info(f"Successfully processed GET request for customer {request.data}")
 
         return Response(
             status=status.HTTP_200_OK,
@@ -59,8 +57,6 @@ class CustomerView(APIView):
 
 
 class QuoteView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         logger.info(f"Received request for quote processing {request.data}")
@@ -68,19 +64,22 @@ class QuoteView(APIView):
         quote = QuoteCreateSerializer(data=request.data)
         quote.is_valid(raise_exception=True)
 
-        customer = get_object_or_404(
-            Customer, id=quote.validated_data["customer_id"]
-        )
+        customer = get_object_or_404(Customer, id=quote.validated_data["customer_id"])
         try:
             premium, cover = price_policy(
                 policy_type=quote.validated_data["type"], dob=customer.dob
             )
+            logger.info(
+                f"Calculated premium and cover for {customer.id} is {premium} and {cover}"
+            )
         except UnsupportedProductType:
+            logger.error(f"Invalid product type {quote.validated_data['type']}")
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={"detail": "Unsupported product type."},
             )
         except IneligibleAgeException as exc:
+            logger.error(f"An ineligible age exception : {customer.dob}")
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
                 data={"detail": str(exc)},
@@ -128,6 +127,9 @@ class QuoteView(APIView):
                 to_state=new_state,
                 note="updated via api",
             )
+        logger.info(
+            f"Successfully updated quote with {policy.id} from {prev_state} to {new_state}"
+        )
 
         return Response(
             status=status.HTTP_200_OK,
@@ -146,9 +148,14 @@ class PolicyListView(generics.ListAPIView):
         params = self.request.query_params
 
         if customer_id := params.get("customer_id"):
+            logger.info(
+                f"Received request to get policy list for customer {customer_id}"
+            )
             qs = qs.filter(customer_id=customer_id)
         if policy_type := params.get("type"):
+            logger.info(f"Received request to get policy list for type {policy_type}")
             qs = qs.filter(type=policy_type)
+
         return qs
 
 
@@ -168,4 +175,5 @@ class PolicyHistoryView(generics.ListAPIView):
 
     def get_queryset(self):
         policy = get_object_or_404(Policy, pk=self.kwargs["policy_id"])
+        logger.info(f"Received request to get policy history for policy {policy.id}")
         return PolicyStateHistory.objects.filter(policy=policy)
