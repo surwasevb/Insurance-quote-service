@@ -4,7 +4,7 @@ from django.db import models
 
 # Customer model to store customer related data
 class Customer(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     first_name = models.CharField(max_length=100)
@@ -20,9 +20,10 @@ class PolicyState(models.TextChoices):
     QUOTED = 'quoted', 'Quoted'
     BOUND = 'bound', 'Bound'
     ACTIVE = 'active', 'Active'
+    ACCEPTED = 'accepted', 'Accepted'
 
 class Policy(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     customer = models.ForeignKey(
         Customer,
         on_delete=models.CASCADE,
@@ -37,3 +38,16 @@ class Policy(models.Model):
 
     def __str__(self):
         return f"{self.type} {self.customer}"
+
+
+class PolicyStateHistory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    policy = models.ForeignKey(
+        Policy,
+        on_delete=models.CASCADE,
+        related_name='state_history'
+    )
+    from_state = models.CharField(max_length=100, choices=PolicyState.choices)
+    to_state = models.CharField(max_length=100,choices=PolicyState.choices)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True)
