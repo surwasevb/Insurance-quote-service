@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -40,10 +41,20 @@ class TestCustomerView(APITestCase):
             last_name="Stokes",
             dob=datetime.date.strptime("25-06-1991", "%d-%m-%Y"),
         )
-        response = self.client.get(reverse("customer"), data=data)
+        response = self.client.get(reverse("customer-search"), data=data)
 
         assert response.status_code == 200
-        assert response.data.get("first_name") == data["first_name"]
+        assert len(response.data) == 1
+        assert response.data[0].get("first_name") == data["first_name"]
+
+    def test_should_return_empty_list_when_customer_not_found(self):
+        response = self.client.get(
+            reverse("customer-search"),
+            data={"first_name": "Nobody"},
+        )
+
+        assert response.status_code == 200
+        assert response.data == []
 
 
 class TestQuoteView(APITestCase):
@@ -94,6 +105,60 @@ class TestQuoteView(APITestCase):
         assert policy_history[0].to_state == "quoted"
         assert policy_history[1].from_state == "quoted"
         assert policy_history[1].to_state == "accepted"
+
+    def test_should_return_404_when_customer_missing_for_quote(self):
+        response = self.client.post(
+            reverse("quote"),
+            data={
+                "customer_id": uuid.uuid4(),
+                "type": "personal-accident",
+            },
+        )
+
+        assert response.status_code == 404
+        assert Policy.objects.count() == 0
+
+    def test_should_return_400_for_unsupported_product_type(self):
+        response = self.client.post(
+            reverse("quote"),
+            data={
+                "customer_id": Customer.objects.all()[0].id,
+                "type": "life",
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.data["detail"] == "Unsupported product type."
+        assert Policy.objects.count() == 0
+
+    def test_should_return_400_for_ineligible_age(self):
+        customer = Customer.objects.create(
+            first_name="Young",
+            last_name="Person",
+            dob=datetime.date.today() - datetime.timedelta(days=365 * 10),
+        )
+        response = self.client.post(
+            reverse("quote"),
+            data={
+                "customer_id": customer.id,
+                "type": "personal-accident",
+            },
+        )
+
+        assert response.status_code == 400
+        assert "age" in response.data["detail"]
+        assert Policy.objects.filter(customer=customer).count() == 0
+
+    def test_should_return_404_when_policy_missing_for_update(self):
+        response = self.client.patch(
+            reverse("quote"),
+            data={
+                "policy_id": uuid.uuid4(),
+                "status": "accepted",
+            },
+        )
+
+        assert response.status_code == 404
 
 
 class TestPolicyView(APITestCase):

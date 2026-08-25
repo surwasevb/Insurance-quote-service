@@ -1,11 +1,13 @@
 import logging
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app.exceptions import IneligibleAgeException, UnsupportedProductType
 from app.models import Customer, Policy, PolicyState, PolicyStateHistory
 from app.pricing import price_policy
 from app.serializers import (
@@ -27,7 +29,6 @@ class CustomerView(APIView):
     serializer_class = CustomerSerializer
 
     def get(self, request, *args, **kwargs):
-
         qs = Customer.objects.all()
         params = request.query_params
 
@@ -39,7 +40,7 @@ class CustomerView(APIView):
         return Response(
             status=status.HTTP_200_OK,
             content_type="application/json",
-            data=CustomerSerializer(qs.get()).data,
+            data=CustomerSerializer(qs, many=True).data,
         )
 
     def post(self, request, *args, **kwargs):
@@ -67,24 +68,38 @@ class QuoteView(APIView):
         quote = QuoteCreateSerializer(data=request.data)
         quote.is_valid(raise_exception=True)
 
-        customer = Customer.objects.get(id=quote.validated_data["customer_id"])
-        premium, cover = price_policy(
-            policy_type=quote.validated_data["type"], dob=customer.dob
+        customer = get_object_or_404(
+            Customer, id=quote.validated_data["customer_id"]
         )
-        policy = Policy.objects.create(
-            customer=customer,
-            premium=premium,
-            cover=cover,
-            type=quote.validated_data["type"],
-            state=PolicyState.QUOTED,
-        )
+        try:
+            premium, cover = price_policy(
+                policy_type=quote.validated_data["type"], dob=customer.dob
+            )
+        except UnsupportedProductType:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Unsupported product type."},
+            )
+        except IneligibleAgeException as exc:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": str(exc)},
+            )
 
-        PolicyStateHistory.objects.create(
-            policy=policy,
-            from_state=PolicyState.NEW,
-            to_state=PolicyState.QUOTED,
-            note="updated via api",
-        )
+        with transaction.atomic():
+            policy = Policy.objects.create(
+                customer=customer,
+                premium=premium,
+                cover=cover,
+                type=quote.validated_data["type"],
+                state=PolicyState.QUOTED,
+            )
+            PolicyStateHistory.objects.create(
+                policy=policy,
+                from_state=PolicyState.NEW,
+                to_state=PolicyState.QUOTED,
+                note="updated via api",
+            )
         logger.info(f"Successfully created quotes with {policy.id}")
 
         return Response(
@@ -94,24 +109,25 @@ class QuoteView(APIView):
         )
 
     def patch(self, request, *args, **kwargs):
-        logger.info(f"Received Patch request for quote {request.data}")
+        logger.info(f"Received request to update quote status {request.data}")
         quote = QuoteUpdateSerializer(data=request.data)
         quote.is_valid(raise_exception=True)
 
         quote_id = quote.validated_data["policy_id"]
         new_state = quote.validated_data["status"]
 
-        policy = Policy.objects.get(id=quote_id)
+        policy = get_object_or_404(Policy, id=quote_id)
         prev_state = policy.state
-        policy.state = new_state
-        policy.save()
 
-        PolicyStateHistory.objects.create(
-            policy=policy,
-            from_state=prev_state,
-            to_state=new_state,
-            note="updated via api",
-        )
+        with transaction.atomic():
+            policy.state = new_state
+            policy.save()
+            PolicyStateHistory.objects.create(
+                policy=policy,
+                from_state=prev_state,
+                to_state=new_state,
+                note="updated via api",
+            )
 
         return Response(
             status=status.HTTP_200_OK,
