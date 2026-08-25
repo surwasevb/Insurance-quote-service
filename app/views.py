@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.models import Customer, Policy, PolicyState, PolicyStateHistory
+from app.pricing import price_policy
 from app.serializers import (
     CustomerSerializer,
     PolicySerializer,
@@ -14,7 +15,6 @@ from app.serializers import (
     QuoteCreateSerializer,
     QuoteUpdateSerializer,
 )
-from app.utils import calculate_age, calculate_premium
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +68,7 @@ class QuoteView(APIView):
         quote.is_valid(raise_exception=True)
 
         customer = Customer.objects.get(id=quote.validated_data["customer_id"])
-        age: int = calculate_age(date_of_birth=customer.dob)
-        premium, cover = calculate_premium(age=age, type=quote.validated_data["type"])
+        premium, cover = price_policy(policy_type=quote.validated_data["type"], dob=quote.validated_data["dob"])
         policy = Policy.objects.create(
             customer=customer,
             premium=premium,
