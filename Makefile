@@ -12,17 +12,8 @@ up: ## Start all services
 down: ## Stop and remove all services
 	docker compose down
 
-restart: ## Restart all services
-	docker compose restart
-
-logs: ## Tail logs from all services
-	docker compose logs -f
-
 shell: ## Open a shell in the web container
 	docker compose exec web bash
-
-dbshell: ## Open a PostgreSQL shell
-	docker compose exec db psql -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-insurance_db}
 
 migrate: ## Run Django migrations
 	docker compose exec web python manage.py migrate
@@ -32,9 +23,6 @@ makemigrations: ## Create Django migrations (usage: make makemigrations ARGS=app
 
 superuser: ## Create a Django superuser
 	docker compose exec web python manage.py createsuperuser
-
-collectstatic: ## Collect static files
-	docker compose exec web python manage.py collectstatic --no-input
 
 run: ## Run makemigrations, migrate, then start dev server
 	docker compose up --build
