@@ -1,12 +1,14 @@
 import logging
 
-from rest_framework import status
+from django.shortcuts import get_object_or_404
+from rest_framework import status, generics
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.models import Customer, Policy, PolicyState, PolicyStateHistory
-from app.serializers import CustomerSerializer, QuoteCreateSerializer, QuoteUpdateSerializer
+from app.serializers import CustomerSerializer, PolicySerializer, QuoteCreateSerializer, \
+    QuoteUpdateSerializer, PolicyStateHistorySerializer
 from app.utils import calculate_age, calculate_premium
 
 logger = logging.getLogger(__name__)
@@ -16,6 +18,20 @@ logger = logging.getLogger(__name__)
 class CustomerView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
+
+    serializer_class = CustomerSerializer
+
+    def get(self, request, *args, **kwargs):
+
+        qs = Customer.objects.all()
+        params = request.query_params
+
+        if first_name := params.get("first_name"):
+            qs = qs.filter(first_name=first_name)
+        if last_name := params.get("last_name"):
+            qs = qs.filter(last_name=last_name)
+
+        return Response(status=status.HTTP_200_OK, content_type="application/json",data = CustomerSerializer(qs.get()).data)
 
     def post(self, request, *args, **kwargs):
         logger.info(F"Received Create request for customer {request.data}")
@@ -74,3 +90,35 @@ class QuoteView(APIView):
                                           to_state=new_state, note="updated via api")
 
         return Response(status=status.HTTP_200_OK, content_type="application/json", data={"id": policy.id})
+
+class PolicyListView(generics.ListAPIView):
+    """GET /api/v1/policies/?customer_id=&type="""
+
+    serializer_class = PolicySerializer
+
+    def get_queryset(self):
+        qs = Policy.objects.select_related("customer").all()
+        params = self.request.query_params
+
+        if customer_id := params.get("customer_id"):
+            qs = qs.filter(customer_id=customer_id)
+        if policy_type := params.get("type"):
+            qs = qs.filter(type=policy_type)
+        return qs
+
+
+class PolicyDetailView(generics.RetrieveAPIView):
+    """GET /api/v1/policies/<id>/"""
+
+    queryset = Policy.objects.select_related("customer").all()
+    serializer_class = PolicySerializer
+
+
+class PolicyHistoryView(generics.ListAPIView):
+    """GET /api/v1/policies/<id>/history/"""
+
+    serializer_class = PolicyStateHistorySerializer
+
+    def get_queryset(self):
+        policy = get_object_or_404(Policy, pk=self.kwargs["policy_id"])
+        return PolicyStateHistory.objects.filter(policy=policy)

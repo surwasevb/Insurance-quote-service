@@ -17,10 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from app.views import CustomerView, QuoteView
+from app.views import CustomerView, QuoteView, PolicyListView, PolicyDetailView, \
+    PolicyHistoryView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("api/v1/create_customer/", CustomerView.as_view(), name="create_customer"),
+
+    path("api/v1/create_customer/", CustomerView.as_view(), name="customer"),
+    path("api/v1/customer/", CustomerView.as_view(), name="customer-search"),
+
     path("api/v1/quote/", QuoteView.as_view(), name="quote"),
+    path("api/v1/policies/", PolicyListView.as_view(), name="policy-for-user"),
+    path("api/v1/policies/<uuid:pk>/", PolicyDetailView.as_view(), name="policy-details"),
+
+    path("api/v1/policies/<uuid:policy_id>/history/", PolicyHistoryView.as_view(), name="policy-history"),
 ]
