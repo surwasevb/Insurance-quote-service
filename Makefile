@@ -44,5 +44,5 @@ lint-fix: ## Lint and auto-fix with Ruff
 typecheck: ## Run type checking with mypy
 	mypy .
 
-test: ## Run tests with pytest
+test: db ## Run tests with pytest
 	pytest
