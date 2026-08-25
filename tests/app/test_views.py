@@ -106,6 +106,25 @@ class TestQuoteView(APITestCase):
         assert policy_history[1].from_state == "quoted"
         assert policy_history[1].to_state == "accepted"
 
+    def test_should_handle_invalid_state_update_transition_quote(self):
+        data = {
+            "customer_id": Customer.objects.all()[0].id,
+            "type": "personal-accident",
+        }
+        response_policy = self.client.post(reverse("quote"), data=data)
+
+        policy_data = {
+            "policy_id": response_policy.data.get("id"),
+            "status": "active",
+        }
+
+        response = self.client.patch(reverse("quote"), data=policy_data)
+        policy = Policy.objects.get(id=response_policy.data.get("id"))
+        PolicyStateHistory.objects.filter(policy=policy)
+
+        assert response.status_code == 400
+        assert response.data == {'detail': 'Invalid state transition'}
+
     def test_should_return_404_when_customer_missing_for_quote(self):
         response = self.client.post(
             reverse("quote"),

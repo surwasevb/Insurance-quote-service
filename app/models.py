@@ -23,6 +23,11 @@ class PolicyState(models.TextChoices):
     ACTIVE = "active", "Active"
     ACCEPTED = "accepted", "Accepted"
 
+VALID_STATE_TRANSITION = {
+    PolicyState.NEW: PolicyState.QUOTED,
+    PolicyState.QUOTED: PolicyState.ACCEPTED,
+    PolicyState.ACCEPTED: PolicyState.ACTIVE,
+}
 
 class Policy(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

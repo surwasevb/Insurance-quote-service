@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.exceptions import IneligibleAgeException, UnsupportedProductType
-from app.models import Customer, Policy, PolicyState, PolicyStateHistory
+from app.models import Customer, Policy, PolicyState, PolicyStateHistory, VALID_STATE_TRANSITION
 from app.pricing import price_policy
 from app.serializers import (
     CustomerSerializer,
@@ -117,6 +117,14 @@ class QuoteView(APIView):
 
         policy = get_object_or_404(Policy, id=quote_id)
         prev_state = policy.state
+
+        # check for valid transitions of state
+        if VALID_STATE_TRANSITION[prev_state] != new_state:
+            logger.error(F"Invalid state transition {prev_state} to {new_state}")
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Invalid state transition"},
+            )
 
         with transaction.atomic():
             policy.state = new_state
