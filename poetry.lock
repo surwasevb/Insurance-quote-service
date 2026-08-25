@@ -696,6 +696,25 @@ pygments = ">=2.7.2"
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+name = "pytest-django"
+version = "4.14.0"
+description = "A Django plugin for pytest."
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "pytest_django-4.14.0-py3-none-any.whl", hash = "sha256:c533b08d89cc675efcd5398eea270b34547e35f9a3608e2c9748dd88428ea187"},
+    {file = "pytest_django-4.14.0.tar.gz", hash = "sha256:26787dd3f422cfbab8f55b80a776e2edea7a11092cb74e960bef1312515708ef"},
+]
+
+[package.dependencies]
+pytest = ">=7.0.0"
+
+[package.extras]
+django = ["django (>=5.2)"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 description = "Extensions to the standard Python datetime module"
@@ -860,5 +879,5 @@ files = [
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.14"
-content-hash = "22f5b4d59a3891ecf0263b2d4dda07f54eb40b6f1213cb6fd92df1adb60c58ed"
+python-versions = ">=3.14"
+content-hash = "a114bd1b7ec6b1eb7bbd8cef5d84554ec19c8d55d9ddd5502085267c00cd974f"

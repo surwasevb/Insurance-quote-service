@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs shell migrate makemigrations superuser dbshell db format lint lint-fix typecheck
+.PHONY: help build up down restart logs shell migrate makemigrations superuser dbshell db format lint lint-fix typecheck test
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -55,3 +55,6 @@ lint-fix: ## Lint and auto-fix with Ruff
 
 typecheck: ## Run type checking with mypy
 	mypy .
+
+test: ## Run tests with pytest
+	pytest

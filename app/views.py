@@ -68,7 +68,7 @@ class QuoteView(APIView):
         quote.is_valid(raise_exception=True)
 
         customer = Customer.objects.get(id=quote.validated_data["customer_id"])
-        premium, cover = price_policy(policy_type=quote.validated_data["type"], dob=quote.validated_data["dob"])
+        premium, cover = price_policy(policy_type=quote.validated_data["type"], dob=customer.dob)
         policy = Policy.objects.create(
             customer=customer,
             premium=premium,

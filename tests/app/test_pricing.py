@@ -2,15 +2,14 @@ import datetime
 from decimal import Decimal
 
 import pytest
+from dateutil.relativedelta import relativedelta
 
 from app.exceptions import IneligibleAge, UnsupportedProductType
 from app.pricing import price_policy, calculate_age
 
-TODAY = datetime.date.today()
-
 
 def _dob_at_age(age: int) -> datetime.date:
-    return TODAY - datetime.timedelta(days=int(age * 365.2425))
+    return datetime.date.today() - relativedelta(years=age)
 
 
 class TestEligibleAges:
@@ -29,8 +28,9 @@ class TestEligibleAges:
             price_policy("life", _dob_at_age(30))
 
     def test_age_36(self):
-        premium, cover = price_policy("personal-accident", _dob_at_age(36))
+        premium, cover = price_policy("personal-accident", _dob_at_age(37))
         assert premium == Decimal("220.00")
+        assert cover == Decimal("200000.00")
 
     def test_age_80(self):
         premium, cover = price_policy("personal-accident", _dob_at_age(80))

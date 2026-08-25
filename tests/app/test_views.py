@@ -67,8 +67,8 @@ class TestQuoteView(APITestCase):
         assert policy.state == PolicyState.QUOTED
         assert policy.type == "personal-accident"
         assert policy.customer_id == data["customer_id"]
-        assert policy.premium == 3500
-        assert policy.cover == 35000
+        assert policy.premium == 200
+        assert policy.cover == 200000
 
     def test_should_update_quote_successfully(self):
         data = {
