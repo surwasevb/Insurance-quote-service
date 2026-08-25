@@ -1,9 +1,8 @@
-
 class UnsupportedProductType(Exception):
     """Raised when a quote is requested for a `type` we don't price."""
 
 
-class IneligibleAge(Exception):
+class IneligibleAgeException(Exception):
     """Raised when the customer's age falls outside any priceable band."""
 
     def __init__(self, age):

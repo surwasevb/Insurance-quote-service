@@ -68,7 +68,9 @@ class QuoteView(APIView):
         quote.is_valid(raise_exception=True)
 
         customer = Customer.objects.get(id=quote.validated_data["customer_id"])
-        premium, cover = price_policy(policy_type=quote.validated_data["type"], dob=customer.dob)
+        premium, cover = price_policy(
+            policy_type=quote.validated_data["type"], dob=customer.dob
+        )
         policy = Policy.objects.create(
             customer=customer,
             premium=premium,
@@ -137,11 +139,10 @@ class PolicyListView(generics.ListAPIView):
 class PolicyDetailView(generics.RetrieveAPIView):
     """GET /api/v1/policies/<id>/"""
 
-
     queryset = Policy.objects.select_related("customer").all()
     serializer_class = PolicySerializer
 
-    lookup_field = 'id'
+    lookup_field = "id"
 
 
 class PolicyHistoryView(generics.ListAPIView):

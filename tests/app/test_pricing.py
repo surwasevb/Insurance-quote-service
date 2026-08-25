@@ -4,8 +4,8 @@ from decimal import Decimal
 import pytest
 from dateutil.relativedelta import relativedelta
 
-from app.exceptions import IneligibleAge, UnsupportedProductType
-from app.pricing import price_policy, calculate_age
+from app.exceptions import IneligibleAgeException, UnsupportedProductType
+from app.pricing import calculate_age, price_policy
 
 
 def _dob_at_age(age: int) -> datetime.date:
@@ -14,14 +14,13 @@ def _dob_at_age(age: int) -> datetime.date:
 
 class TestEligibleAges:
     def test_age_10(self):
-        with pytest.raises(IneligibleAge):
+        with pytest.raises(IneligibleAgeException):
             price_policy("personal-accident", _dob_at_age(10))
 
     def test_age_18(self):
         premium, cover = price_policy("personal-accident", _dob_at_age(18))
         assert premium == Decimal("240.00")
         assert cover == Decimal("200000.00")
-
 
     def test_unknown_type_raises(self):
         with pytest.raises(UnsupportedProductType):
@@ -36,5 +35,7 @@ class TestEligibleAges:
         premium, cover = price_policy("personal-accident", _dob_at_age(80))
         assert premium == Decimal("400.00")
 
-    def test_calculate_age(self) -> Decimal:
-        assert calculate_age(date_of_birth=datetime.date(day=29,month=9,year=1990)) == 35
+    def test_calculate_age(self):
+        assert (
+            calculate_age(date_of_birth=datetime.date(day=29, month=9, year=1990)) == 35
+        )
