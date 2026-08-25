@@ -137,8 +137,11 @@ class PolicyListView(generics.ListAPIView):
 class PolicyDetailView(generics.RetrieveAPIView):
     """GET /api/v1/policies/<id>/"""
 
+
     queryset = Policy.objects.select_related("customer").all()
     serializer_class = PolicySerializer
+
+    lookup_field = 'id'
 
 
 class PolicyHistoryView(generics.ListAPIView):

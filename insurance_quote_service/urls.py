@@ -33,7 +33,7 @@ urlpatterns = [
     path("api/v1/quote/", QuoteView.as_view(), name="quote"),
     path("api/v1/policies/", PolicyListView.as_view(), name="policy-for-user"),
     path(
-        "api/v1/policies/<uuid:pk>/", PolicyDetailView.as_view(), name="policy-details"
+        "api/v1/policies/<uuid:id>/", PolicyDetailView.as_view(), name="policy-details"
     ),
     path(
         "api/v1/policies/<uuid:policy_id>/history/",
