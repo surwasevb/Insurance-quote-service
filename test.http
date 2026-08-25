@@ -1,0 +1,58 @@
+### Create Customer
+POST http://127.0.0.1:8000/api/v1/create_customer/
+Content-Type: application/json
+
+{
+  "first_name": "Ben",
+  "last_name": "Stokes",
+  "dob": "25-06-1991"
+}
+
+### Create Customer
+POST http://127.0.0.1:8000/api/v1/create_customer/
+Content-Type: application/json
+
+{
+  "first_name": "Vijay",
+  "last_name": "Surwase",
+  "dob": "29-09-1990"
+}
+
+### Search Customer by first_name
+GET http://127.0.0.1:8000/api/v1/customer/?first_name=Ben
+
+### Search Customer by last_name
+GET http://127.0.0.1:8000/api/v1/customer/?last_name=Surwase
+
+### Create Quote (replace customer_id with actual UUID from create_customer response)
+POST http://127.0.0.1:8000/api/v1/quote/
+Content-Type: application/json
+
+{
+  "customer_id": "9603d34b-81b6-4d0d-84fd-555aa38b4cca",
+  "type": "personal-accident"
+}
+
+### Update Quote State (replace policy_id with actual UUID from create quote response)
+PATCH http://127.0.0.1:8000/api/v1/quote/
+Content-Type: application/json
+
+{
+  "policy_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "bound"
+}
+
+### List All Policies
+GET http://127.0.0.1:8000/api/v1/policies/
+
+### List Policies by customer_id
+GET http://127.0.0.1:8000/api/v1/policies/?customer_id=9603d34b-81b6-4d0d-84fd-555aa38b4cca
+
+### List Policies by type
+GET http://127.0.0.1:8000/api/v1/policies/?type=personal-accident
+
+### Get Policy Details (replace policy_id with actual UUID)
+GET http://127.0.0.1:8000/api/v1/policies/a1b2c3d4-e5f6-7890-abcd-ef1234567890/
+
+### Get Policy State History (replace policy_id with actual UUID)
+GET http://127.0.0.1:8000/api/v1/policies/a1b2c3d4-e5f6-7890-abcd-ef1234567890/history/
