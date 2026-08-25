@@ -45,4 +45,5 @@ typecheck: ## Run type checking with mypy
 	mypy .
 
 test: db ## Run tests with pytest
+	docker compose run --rm web python manage.py migrate
 	pytest

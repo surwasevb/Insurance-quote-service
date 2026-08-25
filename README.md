@@ -129,7 +129,15 @@ git clone <repo-url> && cd Insurance-quote-service
 cp .env.example .env
 ```
 
-### 2. Start the app
+### 2. Run tests to verify setup
+
+```bash
+make test
+```
+
+This starts the database, runs migrations, and executes the test suite with coverage.
+
+### 3. Start the app
 
 ```bash
 make run
@@ -137,7 +145,7 @@ make run
 
 This builds the image, runs migrations, and starts the dev server at `http://localhost:8000`.
 
-### 3. Create a superuser
+### 4. Create a superuser
 
 ```bash
 make superuser
@@ -145,7 +153,7 @@ make superuser
 
 Follow the prompts to set a username, email, and password.
 
-### 4. Access Django Admin
+### 5. Access Django Admin
 
 Navigate to [http://localhost:8000/admin/](http://localhost:8000/admin/) and log in with the superuser credentials created above.
 
