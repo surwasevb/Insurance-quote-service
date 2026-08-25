@@ -6,6 +6,18 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app.constants import (
+    CONTENT_TYPE_JSON,
+    ERROR_INVALID_STATE_TRANSITION,
+    ERROR_UNSUPPORTED_PRODUCT_TYPE,
+    POLICY_NOTE,
+    QUERY_PARAM_CUSTOMER_ID,
+    QUERY_PARAM_FIRST_NAME,
+    QUERY_PARAM_LAST_NAME,
+    QUERY_PARAM_STATUS,
+    QUERY_PARAM_TYPE,
+    RESPONSE_KEY_DETAIL,
+)
 from app.exceptions import IneligibleAgeException, UnsupportedProductType
 from app.models import Customer, Policy, PolicyState, PolicyStateHistory, VALID_STATE_TRANSITION
 from app.pricing import price_policy
@@ -28,16 +40,16 @@ class CustomerView(APIView):
         qs = Customer.objects.all()
         params = request.query_params
 
-        if first_name := params.get("first_name"):
+        if first_name := params.get(QUERY_PARAM_FIRST_NAME):
             qs = qs.filter(first_name=first_name)
-        if last_name := params.get("last_name"):
+        if last_name := params.get(QUERY_PARAM_LAST_NAME):
             qs = qs.filter(last_name=last_name)
 
         logger.info(f"Successfully processed GET request for customer {request.data}")
 
         return Response(
             status=status.HTTP_200_OK,
-            content_type="application/json",
+            content_type=CONTENT_TYPE_JSON,
             data=CustomerSerializer(qs, many=True).data,
         )
 
@@ -51,7 +63,7 @@ class CustomerView(APIView):
         logger.info(f"Successfully created user with {customer.id}")
         return Response(
             status=status.HTTP_201_CREATED,
-            content_type="application/json",
+            content_type=CONTENT_TYPE_JSON,
             data={"id": customer.id},
         )
 
@@ -76,13 +88,13 @@ class QuoteView(APIView):
             logger.error(f"Invalid product type {quote.validated_data['type']}")
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={"detail": "Unsupported product type."},
+                data={RESPONSE_KEY_DETAIL: ERROR_UNSUPPORTED_PRODUCT_TYPE},
             )
         except IneligibleAgeException as exc:
             logger.error(f"An ineligible age exception : {customer.dob}")
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={"detail": str(exc)},
+                data={RESPONSE_KEY_DETAIL: str(exc)},
             )
 
         with transaction.atomic():
@@ -97,7 +109,7 @@ class QuoteView(APIView):
                 policy=policy,
                 from_state=PolicyState.NEW,
                 to_state=PolicyState.QUOTED,
-                note="updated via api",
+                note=POLICY_NOTE,
             )
         logger.info(f"Successfully created quotes with {policy.id}")
 
@@ -123,7 +135,7 @@ class QuoteView(APIView):
             logger.error(F"Invalid state transition {prev_state} to {new_state}")
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={"detail": "Invalid state transition"},
+                data={RESPONSE_KEY_DETAIL: ERROR_INVALID_STATE_TRANSITION},
             )
 
         with transaction.atomic():
@@ -133,7 +145,7 @@ class QuoteView(APIView):
                 policy=policy,
                 from_state=prev_state,
                 to_state=new_state,
-                note="updated via api",
+                note=POLICY_NOTE,
             )
         logger.info(
             f"Successfully updated quote with {policy.id} from {prev_state} to {new_state}"
@@ -141,7 +153,7 @@ class QuoteView(APIView):
 
         return Response(
             status=status.HTTP_200_OK,
-            content_type="application/json",
+            content_type=CONTENT_TYPE_JSON,
             data={"id": policy.id},
         )
 
@@ -155,12 +167,12 @@ class PolicyListView(generics.ListAPIView):
         qs = Policy.objects.select_related("customer").all()
         params = self.request.query_params
 
-        if customer_id := params.get("customer_id"):
+        if customer_id := params.get(QUERY_PARAM_CUSTOMER_ID):
             logger.info(
                 f"Received request to get policy list for customer {customer_id}"
             )
             qs = qs.filter(customer_id=customer_id)
-        if policy_type := params.get("type"):
+        if policy_type := params.get(QUERY_PARAM_TYPE):
             logger.info(f"Received request to get policy list for type {policy_type}")
             qs = qs.filter(type=policy_type)
 
